@@ -7,9 +7,6 @@ VERSION="2.0-2"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 DEBUG=1
 
-# Number of days to keep
-ROTATE_DIR=7
-
 # Complete path to backup server
 # in the form of
 # server::modulo
@@ -20,14 +17,17 @@ BACKUP_FROM=$1
 # /backup/myserver.com/
 BACKUP_TO=$2
 
+# Number of days to keep
+ROTATE_DIR=$3
+
 #RSYNC_SWITCH="-av --delete --whole-file --numeric-ids"
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
 
 # first log the status
-echo "MY backup rel. $VERSION"
+echo "Rsync backup v.$VERSION"
 echo "-----------------------"
 echo
-echo "mirrordisk start at $(date)"
+echo "backup start at $(date)"
 echo "From: $BACKUP_FROM"
 echo "to: $BACKUP_TO"
 echo
@@ -95,3 +95,4 @@ echo
 echo "mirrordisk end at $(date)"
 
 exit 0
+
