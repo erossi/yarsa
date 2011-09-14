@@ -1,11 +1,14 @@
 #!/bin/bash
 #
-# Mirror dir automatico per backup via rsyncd
+# backup via rsyncd
 #
 # this release
+# todo: link to the git describe --tags
 VERSION="2.0-2"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 DEBUG=1
+
+# todo: Check 3 param in input
 
 # Complete path to backup server
 # in the form of
@@ -20,8 +23,11 @@ BACKUP_TO=$2
 # Number of days to keep
 ROTATE_DIR=$3
 
-#RSYNC_SWITCH="-av --delete --whole-file --numeric-ids"
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
+
+# todo: Check for /etc/mirror_rsync/mirror_rsync.conf
+
+# todo: Check for ~/.mirror_rsync/mirror_rsync.conf
 
 # first log the status
 echo "Rsync backup v.$VERSION"
@@ -36,7 +42,7 @@ echo "-- df -m --"
 df -m
 echo
 
-# Check the dest.
+# Check the dest. dir
 echo -n "Check dest. dir..........................["
 if [ ! -d "$BACKUP_TO" ]
  then
@@ -45,7 +51,7 @@ if [ ! -d "$BACKUP_TO" ]
 fi
 echo "OK]"
 
-# 1st erasing the oldest
+# 1st erasing the oldest dir
 echo -n "Removing $ROTATE_DIR ..............................["
 if [ -d $BACKUP_TO/d$ROTATE_DIR ]
  then
@@ -55,8 +61,7 @@ if [ -d $BACKUP_TO/d$ROTATE_DIR ]
  echo "FAILED]"
 fi
 
-# rotate
-
+# rotate all the other dir
 for (( i=$ROTATE_DIR; i>0; i-- ))
  do
  (( j=i-1 ))
@@ -70,6 +75,7 @@ for (( i=$ROTATE_DIR; i>0; i-- ))
  fi
  done
 
+# hard link the first one
 echo -n "Hard linking d1 to d0 ...................["
 if [ -d $BACKUP_TO/d1 ]
  then
@@ -79,6 +85,7 @@ if [ -d $BACKUP_TO/d1 ]
  echo "FAILED]"
 fi
 
+# and execute the sync
 echo
 echo ""
 echo "rsync $RSYNC_SWITCH $BACKUP_FROM $BACKUP_TO/d0/ 2>&1"

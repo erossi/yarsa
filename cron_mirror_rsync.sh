@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 PROG=/root/rsync_backup/mirror_rsync.sh
 LOGDIR=/var/log
