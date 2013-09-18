@@ -4,26 +4,27 @@
 #
 # this release
 # todo: link to the git describe --tags
-VERSION="2.0-2"
+VERSION="3.0"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 DEBUG=1
 
 # todo: Check 3 param in input
 
-# Complete path to backup server
-# in the form of
+# Complete path to backup server in the form of
 # server::modulo
 BACKUP_FROM=$1
 
 # Dir where to store the incremental backups
-# es.
-# /backup/myserver.com/
+# ex. /backup/myserver.com/
 BACKUP_TO=$2
 
 # Number of days to keep
 ROTATE_DIR=$3
 
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
+
+# Find the oldest copy to remove
+OLDEST_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|head -1)
 
 # todo: Check for /etc/mirror_rsync/mirror_rsync.conf
 
