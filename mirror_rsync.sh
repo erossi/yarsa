@@ -8,7 +8,7 @@ VERSION="3.0"
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 DEBUG=1
 
-# todo: Check 3 param in input
+# todo: Check 3 params in input
 
 # Complete path to backup server in the form of
 # server::modulo
@@ -21,9 +21,11 @@ BACKUP_TO=$2
 # Number of days to keep
 ROTATE_DIR=$3
 
+# The rsync command to use.
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
 
 # Find the oldest copy to remove
+# note: Not yet implemented!
 OLDEST_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|head -1)
 
 # todo: Check for /etc/mirror_rsync/mirror_rsync.conf
@@ -43,7 +45,7 @@ echo "-- df -m --"
 df -m
 echo
 
-# Check the dest. dir
+# Check the destination directory for safe
 echo -n "Check dest. dir..........................["
 if [ ! -d "$BACKUP_TO" ]
  then
@@ -94,13 +96,9 @@ echo
 rsync $RSYNC_SWITCH $BACKUP_FROM $BACKUP_TO/d0/ 2>&1
 echo
 echo Completed
-
 echo
 echo "-- df -m --"
 df -m
 echo
-
-echo "mirrordisk end at $(date)"
-
+echo "rsync backup end at $(date)"
 exit 0
-
