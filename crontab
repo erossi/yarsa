@@ -1,2 +1,1 @@
-30 22 * * * test -e /root/rsync_backup/cron_mirror_rsync.sh && /root/rsync_backup/cron_mirror_rsync.sh
-
+30 22 * * * test -e /root/rsync_backup/cron_rsync_backup.sh && /root/rsync_backup/cron_rsync_backup.sh

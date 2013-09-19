@@ -17,12 +17,87 @@
 #
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
-# todo: link to the git describe --tags
-VERSION="3.0"
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
-DEBUG=1
+# Perform some safety checks before starting the backup.
+function do_checks() {
+# Number of backups > 0
+echo -n "Check bck number ... ["
 
-# todo: Check 3 params in input
+if [ $KEEP_DIR_NO -gt 0 ]; then
+    echo "OK]"
+else
+    echo "FAILED]"
+    exit 1
+fi
+
+# Check the destination directory for safe
+echo -n "Check dirs ... ["
+
+if [ -d "$BACKUP_TO" ] && [ -d "$LINK_DIR" ] && [ ! -e $NEW_BCK_DIR ]; then
+    echo "OK]"
+else
+    echo "FAILED]"
+    exit 1
+fi
+
+# Check for the exclude file in backups directory
+echo -n "Check exclude file: $EXCLUDE_FILE ... ["
+
+if [ -f "$EXCLUDE_FILE" ]; then
+    echo "OK]"
+else
+    echo "FAILED]"
+    exit 1
+fi
+}
+
+# List all backup's directory found.
+function list_backup_dir() {
+echo "backup directory found: $BCK_NO"
+
+for i in $BCK_LIST; do
+    echo "... " $i
+done
+}
+
+# List the backup's directory to be removed.
+function list_rm_dir() {
+echo "directory to remove: $RM_NO"
+
+for i in $RM_LIST; do
+    echo "... " $i
+done
+}
+
+function remove_old_backups() {
+for i in $RM_LIST; do
+    echo -n "Removing ... $i ... ["
+
+    if [ -d $i ]; then
+        rm -rf $i
+        echo "OK]"
+    else
+        echo "FAILED]"
+        exit 2
+    fi
+done
+}
+
+function link_new_dir() {
+echo -n "Hard linking $NEW_BCK_DIR to $LINK_DIR ... ["
+
+if [ -d $LINK_DIR ]; then
+    cp -al $LINK_DIR $NEW_BCK_DIR
+    echo "OK]"
+else
+    echo "FAILED]"
+    exit 3
+fi
+}
+
+## Main
+# todo: link to the git describe --tags
+VERSION="1.0"
+PATH=/bin:/usr/bin:/sbin:/usr/sbin
 
 # Complete path to backup server in the form of
 # server::modulo
@@ -32,91 +107,61 @@ BACKUP_FROM=$1
 # ex. /backup/myserver.com/
 BACKUP_TO=$2
 
-# Number of days to keep
-ROTATE_DIR=$3
+# Number of backups to keep
+KEEP_DIR_NO=$3
+
+# The exclude file, lists of all file not to be backed UP
+EXCLUDE_FILE=$BACKUP_TO/rsync_backup_exclude.cfg
 
 # The rsync command to use.
-RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
+RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids --exclude-from=$EXCLUDE_FILE"
 
-# Find the oldest copy to remove
-# note: Not yet implemented!
-OLD_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|head -1)
-NEW_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|tail -1)
-NOW_DIR=$(date +%y%m%d%H%M)
+# Actual number of backups directory
+BCK_NO=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*" | wc -l)
+BCK_LIST=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*" | sort)
 
-# Create a list of dir to remove like:
-#LISTA=$(find /tmp/ -maxdepth 1 -type d -name "r_*"|sort|head -3)
-#
-# for i in $LISTA; do
-# echo $i
-# done
+# Directory to remove
+RM_NO=$(($BCK_NO - $KEEP_DIR_NO))
 
-# todo: Check for /etc/mirror_rsync/mirror_rsync.conf
+if [ $RM_NO -gt 0 ]; then
+    # Create a list of dir to remove like:
+    RM_LIST=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|head -$RM_NO)
+fi
 
-# todo: Check for ~/.mirror_rsync/mirror_rsync.conf
+# The most recent backups
+LINK_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|tail -1)
+
+# The new backups to create
+NEW_BCK_DIR=$BACKUP_TO/rsb_$(date +%y%m%d%H%M)
 
 # first log the status
-echo "Rsync backup v.$VERSION"
-echo "-----------------------"
+echo "Rsync backup $VERSION"
+echo "----------------"
 echo
 echo "backup start at $(date)"
 echo "From: $BACKUP_FROM"
 echo "to: $BACKUP_TO"
+echo "keep: $KEEP_DIR_NO"
+list_backup_dir
 echo
-
+list_rm_dir
+echo
 echo "-- df -m --"
 df -m
 echo
-
-# Check the destination directory for safe
-echo -n "Check dirs ..........................["
-
-if [ -d "$BACKUP_TO" ] && [ -d "$OLD_DIR" ] && [ -d "$NEW_DIR" ]; then
-    echo "OK]"
-else
-    echo "FAILED]"
-    exit 1
-fi
+do_checks
 
 # 1st erasing the oldest dir
-echo -n "Removing $ROTATE_DIR ..............................["
-
-if [ -d $BACKUP_TO/d$ROTATE_DIR ]; then
-    rm -rf $BACKUP_TO/d$ROTATE_DIR
-    echo "OK]"
-else
-    echo "FAILED]"
-fi
-
-# rotate all the other dir
-for (( i=$ROTATE_DIR; i>0; i-- )); do
-    (( j=i-1 ))
-    echo -n "Moving d$j -> d$i .........................["
-
-    if [ -d $BACKUP_TO/d$j ]; then
-        mv $BACKUP_TO/d$j $BACKUP_TO/d$i
-        echo "OK]"
-    else
-        echo "FAILED]"
-    fi
-done
+remove_old_backups
 
 # hard link the first one
-echo -n "Hard linking d1 to d0 ...................["
-
-if [ -d $BACKUP_TO/d1 ]; then
-    cp -al $BACKUP_TO/d1 $BACKUP_TO/d0
-    echo "OK]"
-else
-    echo "FAILED]"
-fi
+link_new_dir
 
 # and execute the sync
 echo
-echo ""
-echo "rsync $RSYNC_SWITCH $BACKUP_FROM $BACKUP_TO/d0/ 2>&1"
+echo "rsync $RSYNC_SWITCH $BACKUP_FROM $NEW_BCK_DIR/ 2>&1"
 echo
-rsync $RSYNC_SWITCH $BACKUP_FROM $BACKUP_TO/d0/ 2>&1
+rsync $RSYNC_SWITCH $BACKUP_FROM $NEW_BCK_DIR/ 2>&1
 echo
 echo Completed
 echo

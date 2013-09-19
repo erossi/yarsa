@@ -1,0 +1,40 @@
+rsync_backup_by_date which do backups into datetime directory like:
+ YYMMGGhhmm
+
+IMPORTANT NOTE
+--------------
+
+* The file rsync_backup_exclude.cfg with (eventually) the list of
+  the file/directory to ignore, MUST exists in the backup directory.
+
+* The source directory ending slash (/) is important,
+  This /my/source -- goes to --> /backup/to/AAMMGGhhmm/source
+  This /my/source/ -- goes to --> /backup/to/AAMMGGhhmm
+
+
+Manual call example
+-------------------
+# backup the dir /home into the /mnt/usbdrive/backup-home
+# keep 10 backups
+./rsync_backup_by_date /home /mnt/usbdrive/backup-home 10
+
+# backup the host myserver.local rsyncd module users into the
+# /mnt/usbdrive/backup-myserver.local/users
+# keep 5 backups
+./rsync_backup_by_date myserver.local::users /mnt/usbdrive/backup-myserver.local/users 5
+
+
+HOWTO test it
+-------------
+# Create the 1st fake directory, does not work if at least 1 old
+# directory is missing.
+mkdir -p /tmp/test_backups/rsb_1
+
+# Create the fake config file (void)
+touch /tmp/test_backups/rsync_backup_exclude.cfg
+
+# backup a real directory as a test like:
+./rsync_backup_by_date /home/enrico/rsync_backup /tmp/test_backups 3
+
+# Repeat the backup over and over playing with the config file and
+# the number of backups.
