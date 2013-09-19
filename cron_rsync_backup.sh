@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# rsyncd backup cron-exe example file
+# rsync backup cron-exe example file
 # Copyright (C) 2013 Enrico Rossi
 #
 #            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
@@ -18,7 +18,7 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 # Change to the path of the installation.
-PROG=/root/rsync_backup/rsync_backup_by_date
+PROG=/root/rsync_backup/rsync_backup
 LOGDIR=/var/log
 
 # example backup the server myserver.fakedomain module homes
