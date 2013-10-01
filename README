@@ -1,40 +1,58 @@
 rsync_backup which do backups into datetime directory like:
- YYMMGGhhmm
+rsb_YYMMGGhhmm
 
 IMPORTANT NOTE
 --------------
 
+* The backup directory and the at least one backup sub-directory must
+  exist. For the 1st backup do:
+  mkdir -p <backup directory>/rsb_1
+
 * The file rsync_backup_exclude.cfg with (eventually) the list of
   the file/directory to ignore, MUST exists in the backup directory.
+  Create a void file if nothing has to be excluded.
+  See rsync man's pages for more info.
 
 * The source directory ending slash (/) is important,
-  This /my/source -- goes to --> /backup/to/AAMMGGhhmm/source
-  This /my/source/ -- goes to --> /backup/to/AAMMGGhhmm
+  This /my/source -- goes to --> <backup directory>/AAMMGGhhmm/source
+  This /my/source/ -- goes to --> <backup directory>/AAMMGGhhmm
 
 
 Manual call example
 -------------------
-# backup the dir /home into the /mnt/usbdrive/backup-home
-# keep 10 backups
+* backup the dir /home into the /mnt/usbdrive/backup-home
+  keep 10 backups
+
+# Initialize the backup directory and no file to be excluded.
+mkdir -p /mnt/usbdrive/backup-home/rsb_1
+touch /mnt/usbdrive/backup-home/rsync_backup_exclude.cfg
+
+# Run the backup
 ./rsync_backup /home /mnt/usbdrive/backup-home 10
 
-# backup the host myserver.local rsyncd module users into the
-# /mnt/usbdrive/backup-myserver.local/users
-# keep 5 backups
-./rsync_backup myserver.local::users /mnt/usbdrive/backup-myserver.local/users 5
+
+* backup the host myserver.local rsyncd module users into the
+  /mnt/myserver.local/users
+  keep 5 backups, exclude all the Cache directory.
+
+# Initialize the backup directory and configuration file.
+mkdir -p /mnt/myserver.local/users/rsb_1
+echo "Cache/" > /mnt/myserver.local/users/rsync_backup_exclude.cfg
+
+# Run the backup
+./rsync_backup myserver.local::users /mnt/myserver.local/users 5
 
 
 HOWTO test it
 -------------
-# Create the 1st fake directory, does not work if at least 1 old
-# directory is missing.
+# Create the 1st fake directory
 mkdir -p /tmp/test_backups/rsb_1
 
 # Create the fake config file (void)
 touch /tmp/test_backups/rsync_backup_exclude.cfg
 
-# backup a real directory as a test like:
-./rsync_backup /home/enrico/rsync_backup /tmp/test_backups 3
+# backup a real directory (ex. /home/myuser/backupme):
+./rsync_backup /home/myuser/backupme /tmp/test_backups 3
 
 # Repeat the backup over and over playing with the config file and
 # the number of backups.
