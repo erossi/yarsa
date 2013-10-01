@@ -1,0 +1,103 @@
+.\" (C) Copyright 2013 Enrico Rossi <e.rossi@tecnobrain.com>,
+.TH RSYNC-BACKUP 1 "2013 Oct 1"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+rsync-backup \- Simple backup system based on rsync
+.SH SYNOPSIS
+.B rsync-backup
+SRC DEST NUMBER_OF_BACKUPS
+.SH DESCRIPTION
+.B Rsync-backup
+is a program written in bash who aim to be a simple way to do
+incremental backups using rsync as backend.
+.PP
+rsync_backup which do backups into datetime directory like:
+.br
+rsb_YYMMGGhhmm
+.PP
+.B IMPORTANT NOTE
+.br
+--------------
+.IP * 4
+The backup directory and the at least one backup sub-directory must
+exist.
+.PP
+.IP * 4
+The file rsync_backup_exclude.cfg with (eventually) the list of
+the file/directory to ignore,
+.IR MUST
+exists in the backup directory.
+.br
+Create a void file if nothing has to be excluded,
+see rsync man's pages for more info.
+.IP * 4
+The source directory ending slash (/) is important,
+.PP
+.RS 4
+/my/source ---> <backup directory>/AAMMGGhhmm/source
+.br
+/my/source/ --> <backup directory>/AAMMGGhhmm
+.RE
+.SH EXAMPLES
+Backup the directory /home into the /mnt/usbdrive/backup-home,
+keep 10 backups.
+First initialize the backup directory, then
+create a void config file so no file will be excluded and
+finally run the backup.
+.PP
+.RS 4
+mkdir -p /mnt/usbdrive/backup-home/rsb_1
+.br
+touch /mnt/usbdrive/backup-home/rsync_backup_exclude.cfg
+.br
+rsync_backup /home /mnt/usbdrive/backup-home 10
+.RE
+.PP
+Backup from the host <foo.bar> rsyncd module "users" into the
+/mnt/foobar/users directory,
+keep 5 backups, exclude all the "Cache" directory.
+.PP
+.RS 4
+mkdir -p /mnt/foobar/users/rsb_1
+.br
+echo "Cache/" > /mnt/foobar/users/rsync_backup_exclude.cfg
+.br
+rsync_backup foo.bar::users /mnt/foobar/users 5
+.RE
+.PP
+.B HOWTO test it
+.br
+-------------
+.PP
+Create the 1st fake directory,
+create the fake config file (void),
+backup a real directory (ex. /home/myuser/backupme),
+do some changes and
+repeat the backup over and over playing with the config file and
+the number of backups.
+.PP
+.RS 4
+mkdir -p /tmp/test_backups/rsb_1
+.br
+touch /tmp/test_backups/rsync_backup_exclude.cfg
+.br
+rsync_backup /home/myuser/backupme /tmp/test_backups 3
+.br
+[apply some changes] ...
+.br
+rsync_backup /home/myuser/backupme /tmp/test_backups 3
+.br
+[...]
+.SH SEE ALSO
+.BR rsync (1).
