@@ -1,0 +1,1 @@
+30 22 * * * test -e /root/yarsa/yarsa_cron && /root/yarsa/yarsa_cron

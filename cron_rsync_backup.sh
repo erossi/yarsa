@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# rsync backup cron-exe example file
+# yarsa backup cron script example file
 # Copyright (C) 2013 Enrico Rossi
 #
 #            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
@@ -18,7 +18,7 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 # Change to the path of the installation.
-PROG=/usr/local/bin/rsync_backup
+PROG=yarsa
 LOGDIR=/var/log
 
 ## example backup the server myserver.fakedomain

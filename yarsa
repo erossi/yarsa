@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# rsyncd backup by date
+# Yet Another RSync bAckup (by date)
 # Copyright (C) 2013 Enrico Rossi
 #
 #            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
@@ -111,7 +111,7 @@ BACKUP_TO=$2
 KEEP_DIR_NO=$3
 
 # The exclude file, lists of all file not to be backed UP
-EXCLUDE_FILE=$BACKUP_TO/rsync_backup_exclude.cfg
+EXCLUDE_FILE=$BACKUP_TO/yarsa_exclude.cfg
 
 # The rsync command to use.
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids --exclude-from=$EXCLUDE_FILE"
@@ -135,7 +135,7 @@ LINK_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|tail -1)
 NEW_BCK_DIR=$BACKUP_TO/rsb_$(date +%y%m%d%H%M)
 
 # first log the status
-echo "Rsync backup $VERSION"
+echo "yarsa backup $VERSION"
 echo "----------------"
 echo
 echo "backup start at $(date)"
@@ -168,7 +168,7 @@ echo
 echo "-- df -m --"
 df -m
 echo
-echo "rsync backup end at $(date)"
+echo "yarsa backup end at $(date)"
 exit 0
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
