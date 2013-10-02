@@ -18,38 +18,53 @@
 #  0. You just DO WHAT THE FUCK YOU WANT TO.
 
 # Change to the path of the installation.
-PROG=/root/rsync_backup/rsync_backup
+PROG=/usr/local/bin/rsync_backup
 LOGDIR=/var/log
 
-# example backup the server myserver.fakedomain module homes
-# handled by rsyncd
-SOURCE="myserver.fakedomain::homes"
+## example backup the server myserver.fakedomain
 
-# example destination dir.
-DEST="/mnt/backup/myserver.fakedomain/homes"
+## module homes handled by rsyncd.
+#SOURCE="myserver.fakedomain::homes"
 
-# The number of backups to keep
-BACKUPS=7
+## Or an ssh access to the same server like
+#SOURCE="user@<myserver.fakedomain:/home/"
 
-# Log filename
-LOG=$LOGDIR/bck-$SOURCE.log
+## example destination directory
+#DEST="/mnt/backup/myserver.fakedomain/homes"
 
-# Run the backup
-$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+## The number of backups to keep
+#BACKUPS=7
 
-# If you want to receive the log file via email uncomment below.
+## Log filename
+# You can user variables as well.
+#LOG=$LOGDIR/bck-myserver_homes.log
+
+## Run the program
+#$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+
+## If you want to receive the log file via email also add:
 #/usr/bin/mail user@host.com < $LOG
 
-# Rotate the log files
-savelog -c $BACKUPS $LOG >/dev/null 2>&1
+## Rotate the log files
+#savelog -c $BACKUPS $LOG >/dev/null 2>&1
 
-## Other backups
+## Examples
 
-# example backup from a filesystem
+## backup from a local filesystem
 SOURCE="/srv/somethingtobackup"
-DEST="/mnt/backup/somethingtobackup"
+DEST="/media/usbdrive/somethingtobackup"
 BACKUPS=10
-LOG=$LOGDIR/bck-$SOURCE.log
+LOG=$LOGDIR/bck-somethingtobackup.log
 $PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
 #/usr/bin/mail user@host.com < $LOG
 savelog -c $BACKUPS $LOG >/dev/null 2>&1
+
+# backup a remote system user john's home directory.
+SOURCE="john@server.com:/home/john/"
+DEST="/media/usbdrive/backup"
+BACKUPS=30
+LOG=$LOGDIR/bck-server_home_john.log
+$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+#/usr/bin/mail user@host.com < $LOG
+savelog -c $BACKUPS $LOG >/dev/null 2>&1
+
