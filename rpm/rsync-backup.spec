@@ -1,9 +1,9 @@
-%define name rsync_backup
+%define name yarsa
 %define version 1.0
 %define unmangled_version 1.0
 %define release jrc.1
 
-Summary: Rsync Backup
+Summary: Yet Another RSync bAckup (yarsa)
 Name: %{name}
 Version: %{version}
 Release: %{release}
@@ -15,7 +15,7 @@ BuildArch: noarch
 Vendor: Enrico Rossi <e.rossi@tecnobrain.com>
 Packager: Enrico Rossi <enrico.rossi@ext.ec.europa.eu>
 Requires: rsync bash
-Url: http://enricorossi.org/gitweb/rsync_backup.git
+Url: http://enricorossi.org/gitweb/yarsa.git
 
 %description
 This is Yet Another RSync bAckup (yarsa).
@@ -32,11 +32,11 @@ mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{docdir}
 mkdir -p %{buildroot}%{_mandir}/man1
 
-install -m 755 rsync_backup %{buildroot}%{_bindir}
-install -m 644 cron_rsync_backup.sh %{docdir}
-mv doc/manpage.1 doc/rsync_backup.1
-gzip doc/rsync_backup.1
-install -m 644 doc/rsync_backup.1.gz %{buildroot}%{_mandir}/man1
+install -m 755 yarsa %{buildroot}%{_bindir}
+install -m 644 yarsa_cron %{docdir}
+mv doc/manpage.1 doc/yarsa.1
+gzip doc/yarsa.1
+install -m 644 doc/yarsa.1.gz %{buildroot}%{_mandir}/man1
 
 %clean
 rm -rf $RPM_BUILD_ROOT

@@ -1,5 +1,5 @@
 .\" (C) Copyright 2013 Enrico Rossi <e.rossi@tecnobrain.com>,
-.TH RSYNC-BACKUP 1 "2013 Oct 1"
+.TH YARSA 1 "2013 Oct 1"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -13,16 +13,16 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-rsync-backup \- Simple backup system based on rsync
+yarsa \- Simple backup system based on rsync
 .SH SYNOPSIS
-.B rsync-backup
+.B yarsa
 SRC DEST NUMBER_OF_BACKUPS
 .SH DESCRIPTION
-.B Rsync-backup
+.B Yarsa
 is a program written in bash who aim to be a simple way to do
 incremental backups using rsync as backend.
 .PP
-rsync_backup which do backups into datetime directory like:
+yarsa which do backups into datetime directory like:
 .br
 rsb_YYMMGGhhmm
 .PP
@@ -34,7 +34,7 @@ The backup directory and the at least one backup sub-directory must
 exist.
 .PP
 .IP * 4
-The file rsync_backup_exclude.cfg with (eventually) the list of
+The file yarsa_exclude.cfg with (eventually) the list of
 the file/directory to ignore,
 .IR MUST
 exists in the backup directory.
@@ -59,9 +59,9 @@ finally run the backup.
 .RS 4
 mkdir -p /mnt/usbdrive/backup-home/rsb_1
 .br
-touch /mnt/usbdrive/backup-home/rsync_backup_exclude.cfg
+touch /mnt/usbdrive/backup-home/yarsa_exclude.cfg
 .br
-rsync_backup /home /mnt/usbdrive/backup-home 10
+yarsa /home /mnt/usbdrive/backup-home 10
 .RE
 .PP
 Backup from the host <foo.bar> rsyncd module "users" into the
@@ -71,9 +71,9 @@ keep 5 backups, exclude all the "Cache" directory.
 .RS 4
 mkdir -p /mnt/foobar/users/rsb_1
 .br
-echo "Cache/" > /mnt/foobar/users/rsync_backup_exclude.cfg
+echo "Cache/" > /mnt/foobar/users/yarsa_exclude.cfg
 .br
-rsync_backup foo.bar::users /mnt/foobar/users 5
+yarsa foo.bar::users /mnt/foobar/users 5
 .RE
 .PP
 .B HOWTO test it
@@ -90,13 +90,13 @@ the number of backups.
 .RS 4
 mkdir -p /tmp/test_backups/rsb_1
 .br
-touch /tmp/test_backups/rsync_backup_exclude.cfg
+touch /tmp/test_backups/yarsa_exclude.cfg
 .br
-rsync_backup /home/myuser/backupme /tmp/test_backups 3
+yarsa /home/myuser/backupme /tmp/test_backups 3
 .br
 [apply some changes] ...
 .br
-rsync_backup /home/myuser/backupme /tmp/test_backups 3
+yarsa /home/myuser/backupme /tmp/test_backups 3
 .br
 [...]
 .SH SEE ALSO
