@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<todo version="0.1.20">
+    <note priority="medium" time="1380786209">
+        Handle switches, like compress for internet file transfer.
+    </note>
+    <note priority="low" time="1380786287">
+        move README example into the manpage.
+    </note>
+</todo>
