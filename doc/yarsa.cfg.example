@@ -1,0 +1,20 @@
+# Yarsa sub-config example.
+# this file is sourced by the software, you can override any
+# variable.
+
+## Default setup
+# BACKUP_FROM=$1
+# BACKUP_TO=$2
+# KEEP_DIR_NO=$3
+# EXCLUDE_FILE=$BACKUP_TO/yarsa_exclude.cfg
+# RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids --exclude-from=$EXCLUDE_FILE"
+
+## Fixed configuration, no exclude file.
+# note: you must call the yarsa command with all the parameters
+# even they are overwritten here.
+# yarsa none /tmp/backup/ 0
+BACKUP_FROM=/usr/sbin
+BACKUP_TO=/tmp/backup/
+KEEP_DIR_NO=3
+unset EXCLUDE_FILE
+RSYNC_SWITCH="-avz --delete --ignore-errors --whole-file --numeric-ids"
