@@ -1,3 +1,4 @@
+#!/bin/bash
 # Yarsa sub-config example.
 # this file is sourced by the software, you can override any
 # variable.
@@ -11,7 +12,12 @@
 
 ## Fixed configuration, no exclude file.
 # note: you must call the yarsa command with all the parameters
-# even they are overwritten here.
+# even they are overwritten here, in particular:
+# The Source can be any string.
+# The destination must be correct in order to find the config file
+# The number of backups can be 0 since it is overwritten.
+#
+# Backup the /usr/sbin dir. into the /tmp/backup with 3 backups history.
 # yarsa none /tmp/backup/ 0
 BACKUP_FROM=/usr/sbin
 BACKUP_TO=/tmp/backup/
