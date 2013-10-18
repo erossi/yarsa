@@ -3,7 +3,13 @@
     <note priority="medium" time="1380786209">
         Handle switches, like compress for internet file transfer.
     </note>
+    <note priority="medium" time="1381828519">
+        bug: check parameters number, if you do not specify some, got error in the code. ex avoid last cycle numbers.
+    </note>
     <note priority="low" time="1380786287">
         move README example into the manpage.
+    </note>
+    <note priority="verylow" time="1381828651">
+        bug: ... missing /srv/scratch/ipsc_backup//yarsa.cfg avoid the '//'
     </note>
 </todo>
