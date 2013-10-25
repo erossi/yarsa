@@ -1,0 +1,4 @@
+	path = /mnt/yarsa-backup
+	pre-xfer exec = /usr/bin/yarsa -c 50 -R > /mnt/yarsa-backup/yarsa.log 2>&1
+	log file=/mnt/yarsa-backup/rsyncd.log
+

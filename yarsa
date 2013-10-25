@@ -96,21 +96,6 @@ check_newlink()
     fi
 }
 
-# Check the config file
-check_config()
-{
-    # Check for the config file in backups directory
-    echo -n " config file: $configfile ... ["
-
-    if [ -f "$configfile" ]; then
-        echo "OK]"
-    else
-        echo -n "FAILED] "
-        echo "missing $configfile"
-        exit 1
-    fi
-}
-
 # Perform some safety checks before starting the backup.
 do_checks()
 {
@@ -121,7 +106,6 @@ do_checks()
     fi
 
     check_dest
-    check_config
     check_cycle
     check_lastlink
     check_newlink
@@ -207,11 +191,13 @@ do_backup()
 # Help message
 usage()
 {
-    echo "Usage: $prog [-h] [-c cycle] [-l] [-r dir] [-R] [-s source dir] [-t] <backup dir>"
+    echo "Usage: $prog [-h] [-c cycle] [-d date] [-f] [-l] [-r] [-R] [-s source dir] [-t] <backup dir>"
     echo "      -c cycle - save cycle versions (default: 7)"
+    echo "      -d date  - link to the date instead of the current time"
+    echo "      -f       - log df space before and after"
     echo "      -l       - create log files"
-    echo "      -r date  - link to the date instead of the current time"
-    echo "      -R       - assume remote, just roll"
+    echo "      -r       - just roll, don't sync"
+    echo "      -R       - assume rsyncd remote call"
     echo "      -s src   - source directory"
     echo "      -t       - create backup directory"
     echo "      -h       - this help"
@@ -223,25 +209,29 @@ prog=$(basename $0)
 count=7
 dodf=
 log=
+logfile=
+remote=
 rolldate=
 rotateonly=
-touch=
+createdir=
 
 while getopts c:dlr:Rs:th opt; do
     case "$opt" in
         c) count="$OPTARG"
             ;;
-        d) dodf=1
+        d) rolldate="$OPTARG"
+            ;;
+        f) dodf=1
             ;;
         l) log=1
             ;;
-        r) rolldate="$OPTARG"
+        r) rotateonly=1
             ;;
-        R) rotateonly=1
+        R) remote=1
             ;;
         s) source="$OPTARG"
             ;;
-        t) touch=1
+        t) createdir=1
             echo "- touch not implemented -"
             exit 1
             ;;
@@ -256,22 +246,45 @@ done
 
 shift $(($OPTIND - 1))
 
-if [ $# -eq 0 ]; then
+if [ $remote ]; then
+    dest=$RSYNC_MODULE_PATH
+    rotateonly=1
+    rolldate=$(basename $RSYNC_REQUEST)
+    source="* REMOTE *"
+    log=1
+    #echo $RSYNC_MODULE_NAME
+    #echo $RSYNC_HOST_ADDR
+    #echo $RSYNC_HOST_NAME
+    #echo $RSYNC_USER_NAME
+    #echo $RSYNC_PID
+    #echo $RSYNC_ARG#
+elif [ $# -eq 0 ]; then
     usage
     exit 1
+else
+    dest=$1
+    # Non valid in remote
+    excludefile=$dest/yarsa.exclude
+    includefile=$dest/yarsa.include
 fi
 
-dest=$1
 configfile=$dest/yarsa.cfg
-excludefile=$dest/yarsa.exclude
-includefile=$dest/yarsa.include
-backup_number=$(find $dest -maxdepth 1 -type d -name "rsb_*" | wc -l)
-backup_list=$(find $dest -maxdepth 1 -type d -name "rsb_*" | sort)
+
+# first log the status
+echo " - yarsa backup system ($VERSION) -"
+echo
+echo "start at $(date)"
 
 # Read the local conffile
 if [ -r "$configfile" ]; then
     . $configfile
+else
+    echo " Error: missing config file: $configfile"
+    exit 1
 fi
+
+backup_number=$(find $dest -maxdepth 1 -type d -name "rsb_*" | wc -l)
+backup_list=$(find $dest -maxdepth 1 -type d -name "rsb_*" | sort)
 
 # Directory to remove
 remove_number=$(($backup_number - $count))
@@ -285,12 +298,12 @@ fi
 last_to_link=$(find $dest -maxdepth 1 -type d -name "rsb_*"|sort|tail -1)
 
 # The new backups to create
-new_to_link=$dest/rsb_$DATUM
+if [ $rolldate ]; then
+    new_to_link=$dest/$rolldate
+else
+    new_to_link=$dest/rsb_$DATUM
+fi
 
-# first log the status
-echo " - yarsa backup system ($VERSION) -"
-echo
-echo "start at $(date)"
 echo "from: $source"
 echo "to: $dest"
 echo "keep: $count"
