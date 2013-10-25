@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Yet Another RSync bAckup (by date)
 # Copyright (C) 2013 Enrico Rossi
@@ -22,181 +22,294 @@ set -e
 # Default configuration
 # todo: link to the git describe --tags
 VERSION="1.0"
-PATH=/bin:/usr/bin:/sbin:/usr/sbin
+PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
+DATUM=$(date +%y%m%d%H%M)
+RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
 
-# Complete path to backup server in the form of
-# server::modulo
-BACKUP_FROM=$1
-
-# Dir where to store the incremental backups
-# ex. /backup/myserver.com/
-BACKUP_TO=$2
-
-# Number of backups to keep
-KEEP_DIR_NO=$3
-
-# Local Config file
-CONFFILE=$BACKUP_TO/yarsa.cfg
-
-# The exclude file, lists of all file not to be backed UP
-EXCLUDE_FILE=$BACKUP_TO/yarsa_exclude.cfg
-
-# The rsync command to use.
-RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids --exclude-from=$EXCLUDE_FILE"
-
-# Read the local conffile
-if [ -r "$CONFFILE" ]; then
-    . $CONFFILE
-fi
-
-# Perform some safety checks before starting the backup.
-function do_checks() {
 # Number of backups > 0
-echo -n "Check bck number ... ["
+check_cycle()
+{
+    echo -n " cycle ... ["
 
-if [ $KEEP_DIR_NO -gt 0 ]; then
-    echo "OK]"
-else
-    echo "FAILED]"
-    echo "... missing number of backups to keep."
-    exit 1
-fi
-
-# Check the destination directory for safe
-echo -n "Check dirs ... ["
-
-if [ -d "$BACKUP_TO" ] && [ -d "$LINK_DIR" ] && [ ! -e $NEW_BCK_DIR ]; then
-    echo "OK]"
-else
-    echo "FAILED]"
-    echo "... missing $BACKUP_TO or $LINK_DIR, $NEW_BCK_DIR"
-    echo "... OR $LINK_DIR is the same of $NEW_BCK_DIR, wait 1 minute."
-    exit 1
-fi
-
-# Check for the config file in backups directory
-echo -n "Check config file: $CONFFILE ... ["
-
-if [ -f "$CONFFILE" ]; then
-    echo "OK]"
-else
-    echo "FAILED]"
-    echo "... missing $CONFFILE"
-    exit 1
-fi
-
-# Check for the exclude file in backups directory if defined.
-if [ -v EXCLUDE_FILE ]; then
-    echo -n "Check exclude file: $EXCLUDE_FILE ... ["
-
-    if [ -f "$EXCLUDE_FILE" ]; then
+    if [ $count -gt 0 ]; then
         echo "OK]"
     else
-        echo "FAILED]"
-        echo "... missing $EXCLUDE_FILE"
+        echo -n "FAILED] "
+        echo "wrong cycle number"
         exit 1
     fi
-fi
+}
+
+# Check the destination directory
+check_dest()
+{
+    echo -n " destination dir ... ["
+
+    if [ -d "$dest" ]; then
+        echo "OK]"
+    else
+        echo -n "FAILED] "
+        echo "missing $dest"
+        exit 1
+    fi
+}
+
+# check the source directory
+check_source()
+{
+    echo -n " source dir ... ["
+
+    if [ -d "$source" ]; then
+        echo "OK]"
+    else
+        echo -n "FAILED] "
+        echo "missing $source"
+        exit 1
+    fi
+}
+
+# Check the last directory to link
+check_lastlink()
+{
+    echo -n " last dir to be linked ... ["
+
+    if [ -d "$last_to_link" ]; then
+        echo "OK]"
+    else
+        echo -n "FAILED] "
+        echo "missing $last_to_link"
+        exit 1
+    fi
+}
+
+# Check the new backup does not exists
+check_newlink()
+{
+    echo -n " new backup dir ... ["
+
+    if [ ! -e $new_to_link ]; then
+        echo "OK]"
+    else
+        echo -n "FAILED] "
+        echo "$last_to_link already exists!."
+        exit 1
+    fi
+}
+
+# Check the config file
+check_config()
+{
+    # Check for the config file in backups directory
+    echo -n " config file: $configfile ... ["
+
+    if [ -f "$configfile" ]; then
+        echo "OK]"
+    else
+        echo -n "FAILED] "
+        echo "missing $configfile"
+        exit 1
+    fi
+}
+
+# Perform some safety checks before starting the backup.
+do_checks()
+{
+    echo "Safety checks:"
+
+    if [ ! $rotateonly ]; then
+        check_source
+    fi
+
+    check_dest
+    check_config
+    check_cycle
+    check_lastlink
+    check_newlink
 }
 
 # List all backup's directory found.
-function list_backup_dir() {
-echo "backup directory found: $BCK_NO"
+list_backup_dir()
+{
+    echo "backup directory found: $backup_number"
 
-for i in $BCK_LIST; do
-    echo "... " $i
-done
+    for i in $backup_list; do
+        echo "... " $i
+    done
 }
 
 # List the backup's directory to be removed.
-function list_rm_dir() {
-echo "directory to remove: $RM_NO"
+list_rm_dir()
+{
+    echo "directory to remove: $remove_number"
 
-for i in $RM_LIST; do
-    echo "... " $i
-done
+    for i in $remove_list; do
+        echo "... " $i
+    done
 }
 
-function remove_old_backups() {
-for i in $RM_LIST; do
-    echo -n "Removing ... $i ... ["
+remove_old_backups()
+{
+    for i in $remove_list; do
+        echo -n "Removing ... $i ... ["
 
-    if [ -d $i ]; then
-        rm -rf $i
+        if [ -d $i ]; then
+            rm -rf $i
+            echo "OK]"
+        else
+            echo "FAILED]"
+            exit 2
+        fi
+    done
+}
+
+link_new_dir()
+{
+    echo -n "Hard linking $new_to_link to $last_to_link ... ["
+
+    if [ -d $last_to_link ]; then
+        cp -al $last_to_link $new_to_link
         echo "OK]"
     else
         echo "FAILED]"
-        exit 2
+        exit 3
     fi
-done
 }
 
-function link_new_dir() {
-echo -n "Hard linking $NEW_BCK_DIR to $LINK_DIR ... ["
+# Echo the df -m
+dodf()
+{
+    if [ $dodf ]; then
+        echo
+        echo "-- df -m --"
+        df -m
+    fi
+}
 
-if [ -d $LINK_DIR ]; then
-    cp -al $LINK_DIR $NEW_BCK_DIR
-    echo "OK]"
-else
-    echo "FAILED]"
-    exit 3
-fi
+# execute the sync
+do_backup()
+{
+    # add the exclude/include files if present.
+    if [ -f $excludefile ]; then
+        RSYNC_SWITCH="$RSYNC_SWITCH --exclude-from=$excludefile"
+    fi
+
+    if [ -f $includefile ]; then
+        RSYNC_SWITCH="$RSYNC_SWITCH --include-from=$includefile"
+    fi
+
+    echo "rsync $RSYNC_SWITCH $source $new_to_link/ 2>&1"
+    echo
+    rsync $RSYNC_SWITCH $source $new_to_link/ 2>&1
+    echo
+    echo " * Completed *"
+}
+
+# Help message
+usage()
+{
+    echo "Usage: $prog [-h] [-c cycle] [-l] [-r dir] [-R] [-s source dir] [-t] <backup dir>"
+    echo "      -c cycle - save cycle versions (default: 7)"
+    echo "      -l       - create log files"
+    echo "      -r date  - link to the date instead of the current time"
+    echo "      -R       - assume remote, just roll"
+    echo "      -s src   - source directory"
+    echo "      -t       - create backup directory"
+    echo "      -h       - this help"
 }
 
 ## Main
-# Actual number of backups directory
-BCK_NO=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*" | wc -l)
-BCK_LIST=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*" | sort)
+# parse args
+prog=$(basename $0)
+count=7
+dodf=
+log=
+rolldate=
+rotateonly=
+touch=
+
+while getopts c:dlr:Rs:th opt; do
+    case "$opt" in
+        c) count="$OPTARG"
+            ;;
+        d) dodf=1
+            ;;
+        l) log=1
+            ;;
+        r) rolldate="$OPTARG"
+            ;;
+        R) rotateonly=1
+            ;;
+        s) source="$OPTARG"
+            ;;
+        t) touch=1
+            echo "- touch not implemented -"
+            exit 1
+            ;;
+        h) usage
+            exit 0
+            ;;
+        *) usage
+            exit 1
+            ;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+    usage
+    exit 1
+fi
+
+dest=$1
+configfile=$dest/yarsa.cfg
+excludefile=$dest/yarsa.exclude
+includefile=$dest/yarsa.include
+backup_number=$(find $dest -maxdepth 1 -type d -name "rsb_*" | wc -l)
+backup_list=$(find $dest -maxdepth 1 -type d -name "rsb_*" | sort)
+
+# Read the local conffile
+if [ -r "$configfile" ]; then
+    . $configfile
+fi
 
 # Directory to remove
-RM_NO=$(($BCK_NO - $KEEP_DIR_NO))
+remove_number=$(($backup_number - $count))
 
-if [ $RM_NO -gt 0 ]; then
-    # Create a list of dir to remove like:
-    RM_LIST=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|head -$RM_NO)
+# Create a list of dir to remove like:
+if [ $remove_number -gt 0 ]; then
+    remove_list=$(find $dest -maxdepth 1 -type d -name "rsb_*"|sort|head -$remove_number)
 fi
 
 # The most recent backups
-LINK_DIR=$(find $BACKUP_TO -maxdepth 1 -type d -name "rsb_*"|sort|tail -1)
+last_to_link=$(find $dest -maxdepth 1 -type d -name "rsb_*"|sort|tail -1)
 
 # The new backups to create
-NEW_BCK_DIR=$BACKUP_TO/rsb_$(date +%y%m%d%H%M)
+new_to_link=$dest/rsb_$DATUM
 
 # first log the status
-echo "yarsa backup $VERSION"
-echo "----------------"
+echo " - yarsa backup system ($VERSION) -"
 echo
-echo "backup start at $(date)"
-echo "From: $BACKUP_FROM"
-echo "to: $BACKUP_TO"
-echo "keep: $KEEP_DIR_NO"
+echo "start at $(date)"
+echo "from: $source"
+echo "to: $dest"
+echo "keep: $count"
 list_backup_dir
-echo
 list_rm_dir
-echo
-echo "-- df -m --"
-df -m
-echo
+dodf
 do_checks
-
-# 1st erasing the oldest dir
 remove_old_backups
-
-# hard link the first one
 link_new_dir
+echo
 
-# and execute the sync
+if [ ! $rotateonly ]; then
+    do_backup
+else
+    echo "Rotate only active, skipping backup."
+fi
+
+dodf
 echo
-echo "rsync $RSYNC_SWITCH $BACKUP_FROM $NEW_BCK_DIR/ 2>&1"
-echo
-rsync $RSYNC_SWITCH $BACKUP_FROM $NEW_BCK_DIR/ 2>&1
-echo
-echo Completed
-echo
-echo "-- df -m --"
-df -m
-echo
-echo "yarsa backup end at $(date)"
-exit 0
+echo "end at $(date)"
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
