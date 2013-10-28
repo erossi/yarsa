@@ -1,0 +1,15 @@
+Source: yarsa
+Section: utils
+Priority: optional
+Maintainer: Enrico Rossi <e.rossi@tecnobrain.com>
+Build-Depends: debhelper (>= 8.0.0)
+Standards-Version: 3.9.3
+#Homepage: <insert the upstream URL, if relevant>
+#Vcs-Git: git://git.debian.org/collab-maint/yarsa.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/yarsa.git;a=summary
+
+Package: yarsa
+Architecture: all
+Depends: ${misc:Depends}, rsync
+Description: Yet Another RSync bAckup tool.
+ <insert long description, indented with spaces>
