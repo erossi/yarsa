@@ -1,5 +1,5 @@
 .\" (C) Copyright 2013 Enrico Rossi <e.rossi@tecnobrain.com>,
-.TH YARSA 1 "2013 Oct 1"
+.TH YARSA 1 "2013 Nov 1"
 .\" Please adjust this date whenever revising the manpage.
 .\"
 .\" Some roff macros, for reference:
@@ -13,16 +13,17 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-yarsa \- Simple backup system based on rsync
+yarsa \- Yet Another RSync bAckup.
 .SH SYNOPSIS
 .B yarsa
-SRC DEST NUMBER_OF_BACKUPS
+[-h] [-c cycle] [-d date] [-f] [-l] [-r] [-R] [-s source dir] [-t]
+backup_dir
 .SH DESCRIPTION
 .B Yarsa
-is a program written in bash who aim to be a simple way to do
+is a program written in shell who aim to be a simple way to do
 incremental backups using rsync as backend.
 .PP
-yarsa which do backups into datetime directory like:
+yarsa will create datetime like sub-directory, 
 .br
 rsb_YYMMGGhhmm
 .PP
@@ -31,7 +32,11 @@ rsb_YYMMGGhhmm
 --------------
 .IP * 4
 The backup directory and the at least one backup sub-directory must
-exist.
+exist. You can initialize the backup directory with:
+.PP
+.RS 4
+mkdir -p /full_path_to_backup-dir/rsb_1
+.RE
 .PP
 .IP * 4
 The file yarsa_exclude.cfg with (eventually) the list of
@@ -49,6 +54,11 @@ The source directory ending slash (/) is important,
 .br
 /my/source/ --> <backup directory>/AAMMGGhhmm
 .RE
+.SH OPTIONS
+.TP
+.B \-h
+Display the online help.
+
 .SH EXAMPLES
 Backup the directory /home into the /mnt/usbdrive/backup-home,
 keep 10 backups.
@@ -99,5 +109,15 @@ yarsa /home/myuser/backupme /tmp/test_backups 3
 yarsa /home/myuser/backupme /tmp/test_backups 3
 .br
 [...]
+.SH FILES
+
 .SH SEE ALSO
 .BR rsync (1).
+
+.SH COPYRIGHT
+Copyright (C) 2013 Enrico Rossi.
+.B yarsa
+is free software; see the GNU General Public Licence version 3 
+or later for copying conditions. There is
+.I no
+warranty.
