@@ -1,1 +1,72 @@
-30 22 * * * test -e /root/yarsa/yarsa_cron && /root/yarsa/yarsa_cron
+#!/bin/sh
+#
+# yarsa cron script example file
+# Copyright (C) 2013 Enrico Rossi
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# You can call this script in a crontab line like:
+# 30 00 * * * test -e /path_to_this_file/yarsa_cron && /path_to_this_file/yarsa_cron
+
+# Default setup
+PROG=yarsa
+LOGDIR=/var/log
+
+## example backup the server foo.bar
+
+## module homes handled by rsyncd.
+#SOURCE="foo.bar::homes"
+
+## Or an ssh access to the same server like
+#SOURCE="user@<foo.bar:/home/"
+
+## example destination directory
+#DEST="/mnt/backup/foo.bar/homes"
+
+## The number of backups to keep
+#BACKUPS=7
+
+## Log filename
+# You can user variables as well.
+#LOG=$LOGDIR/bck-myserver_homes.log
+
+## Run the program
+#$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+
+## If you want to receive the log file via email also add:
+#/usr/bin/mail user@host.com < $LOG
+
+## Rotate the log files
+#savelog -c $BACKUPS $LOG >/dev/null 2>&1
+
+## Examples
+
+## backup from a local filesystem
+SOURCE="/srv/somethingtobackup"
+DEST="/media/usbdrive/somethingtobackup"
+BACKUPS=10
+LOG=$LOGDIR/bck-somethingtobackup.log
+$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+#/usr/bin/mail user@host.com < $LOG
+savelog -c $BACKUPS $LOG >/dev/null 2>&1
+
+# backup a remote system user john's home directory.
+SOURCE="john@server.com:/home/john/"
+DEST="/media/usbdrive/backup"
+BACKUPS=30
+LOG=$LOGDIR/bck-server_home_john.log
+$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+#/usr/bin/mail user@host.com < $LOG
+savelog -c $BACKUPS $LOG >/dev/null 2>&1
+
