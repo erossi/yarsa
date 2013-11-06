@@ -100,9 +100,10 @@ do_checks()
 {
     echo "Safety checks:"
 
-    if [ ! $rotateonly ]; then
-        check_source
-    fi
+    # Why check the source???
+#    if [ ! $rotateonly ]; then
+#        check_source
+#    fi
 
     check_dest
     check_cycle
