@@ -25,81 +25,74 @@ PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
 DATUM=$(date +%y%m%d%H%M)
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
 
-# Number of backups > 0
+# Check if the number of backups > 0
 check_cycle()
 {
-    echo -n " cycle ... ["
+    echo -n "Keep old backup: "
 
     if [ $count -gt 0 ]; then
-        echo "OK]"
+        echo "$count"
     else
-        echo -n "FAILED] "
-        echo "wrong cycle number"
+        echo "Error, wrong number $count"
         exit 1
     fi
 }
 
-# Check the destination directory
+# Check the destination directory.
 check_dest()
 {
-    echo -n " destination dir ... ["
+    echo -n "Backup to: "
 
     if [ -d "$dest" ]; then
-        echo "OK]"
+        echo "$dest"
     else
-        echo -n "FAILED] "
-        echo "missing $dest"
+        echo "Error $dest not found."
         exit 1
     fi
 }
 
-# check the source directory
+# Check the source directory.
 check_source()
 {
-    echo -n " source dir ... ["
+    echo -n "Source: "
 
     if [ -d "$source" ]; then
-        echo "OK]"
+        echo "$source"
     else
-        echo -n "FAILED] "
-        echo "missing $source"
+        echo "Error $source not found."
         exit 1
     fi
 }
 
-# Check the last directory to link
+# Check if the last directory to be linked exists.
 check_lastlink()
 {
-    echo -n " last dir to be linked ... ["
+    echo -n "Last backup to be linked: "
 
     if [ -d "$last_to_link" ]; then
-        echo "OK]"
+        echo "$last_to_link"
     else
-        echo -n "FAILED] "
-        echo "missing $last_to_link"
+        echo "Error $last_to_link not found."
         exit 1
     fi
 }
 
-# Check the new backup does not exists
+# Check if the new backup does not already exists.
 check_newlink()
 {
-    echo -n " new backup dir ... ["
+    echo -n "New backup: "
 
     if [ ! -e $new_to_link ]; then
-        echo "OK]"
+        echo "$new_to_link"
     else
-        echo -n "FAILED] "
-        echo "$last_to_link already exists!."
+        echo "Error, $new_to_link already exists!."
         exit 1
     fi
 }
 
-# Perform some safety checks before starting the backup.
+# Perform safety checks before starting the backup.
 do_checks()
 {
-    echo "Safety checks:"
-
     # Why check the source???
 #    if [ ! $rotateonly ]; then
 #        check_source
@@ -117,7 +110,7 @@ list_backup_dir()
     echo "backup directory found: $backup_number"
 
     for i in $backup_list; do
-        echo "... " $i
+        echo " " $i
     done
 }
 
@@ -127,7 +120,7 @@ list_rm_dir()
     echo "directory to remove: $remove_number"
 
     for i in $remove_list; do
-        echo "... " $i
+        echo " " $i
     done
 }
 
@@ -191,16 +184,19 @@ do_backup()
 # Help message
 usage()
 {
-    echo "Usage: $prog [-h] [-c cycle] [-d date] [-f] [-l] [-r] [-R] [-s source dir] [-t] <backup dir>"
-    echo "      -c cycle - save cycle versions (default: 7)"
-    echo "      -d date  - link to the date instead of the current time"
-    echo "      -f       - log df space before and after"
-    echo "      -l       - create log files"
-    echo "      -r       - just roll, don't sync"
-    echo "      -R       - assume rsyncd remote call"
-    echo "      -s src   - source directory"
-    echo "      -t       - create backup directory"
-    echo "      -h       - this help"
+    echo "Usage: $prog [-h] [-c cycle] [-d date] [-f] [-l] [-r] [-s SRC] [-t] DEST"
+    echo " or    $prog [-R] [-c cycle] [-f] [-t]"
+    echo
+    echo "Options"
+    echo " -c cycle - save cycle versions (default: 7)"
+    echo " -d date  - link to the date instead of the current time"
+    echo " -f       - log df space before and after"
+    echo " -l       - create log files"
+    echo " -r       - just roll, don't sync"
+    echo " -R       - assume rsyncd remote call"
+    echo " -s src   - source directory"
+    echo " -t       - create backup directory"
+    echo " -h       - this help"
 }
 
 ## Main
@@ -258,7 +254,7 @@ if [ $remote ]; then
     #echo $RSYNC_USER_NAME
     #echo $RSYNC_PID
     #echo $RSYNC_ARG#
-elif [ $# -eq 0 ]; then
+elif [ $# -eq 0 ] || [ $# -gt 1 ]; then
     usage
     exit 1
 else
@@ -271,7 +267,7 @@ fi
 configfile=$dest/yarsa.cfg
 
 # first log the status
-echo " - yarsa backup system ($VERSION) -"
+echo "Yarsa backup system ($VERSION)"
 echo
 echo "start at $(date)"
 
@@ -279,7 +275,7 @@ echo "start at $(date)"
 if [ -r "$configfile" ]; then
     . $configfile
 else
-    echo " Error: missing config file: $configfile"
+    echo " Missing config file: $configfile"
     exit 1
 fi
 
@@ -304,13 +300,10 @@ else
     new_to_link=$dest/rsb_$DATUM
 fi
 
-echo "from: $source"
-echo "to: $dest"
-echo "keep: $count"
+do_checks
 list_backup_dir
 list_rm_dir
 dodf
-do_checks
 remove_old_backups
 link_new_dir
 echo
