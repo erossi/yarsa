@@ -19,17 +19,12 @@
 # You can call this script in a crontab line like:
 # 30 00 * * * test -e /path_to_this_file/yarsa_cron && /path_to_this_file/yarsa_cron
 
-# Default setup
-PROG=yarsa
-LOGDIR=/var/log
-
 ## example backup the server foo.bar
-
 ## module homes handled by rsyncd.
-#SOURCE="foo.bar::homes"
+#SRC="foo.bar::homes"
 
 ## Or an ssh access to the same server like
-#SOURCE="user@<foo.bar:/home/"
+#SRC="user@<foo.bar:/home/"
 
 ## example destination directory
 #DEST="/mnt/backup/foo.bar/homes"
@@ -39,10 +34,10 @@ LOGDIR=/var/log
 
 ## Log filename
 # You can user variables as well.
-#LOG=$LOGDIR/bck-myserver_homes.log
+#LOG=/var/log/bck-myserver_homes.log
 
 ## Run the program
-#$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+#yarsa -c $BACKUPS -f -s $SRC $DEST >$LOG 2>&1
 
 ## If you want to receive the log file via email also add:
 #/usr/bin/mail user@host.com < $LOG
@@ -52,21 +47,21 @@ LOGDIR=/var/log
 
 ## Examples
 
-## backup from a local filesystem
-SOURCE="/srv/somethingtobackup"
+## backup from a local filesystem.
+SRC="/srv/somethingtobackup"
 DEST="/media/usbdrive/somethingtobackup"
 BACKUPS=10
-LOG=$LOGDIR/bck-somethingtobackup.log
-$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+LOG=$DEST/bck-somethingtobackup.log
+yarsa -c $BACKUPS -f -s $SRC $DEST >$LOG 2>&1
 #/usr/bin/mail user@host.com < $LOG
 savelog -c $BACKUPS $LOG >/dev/null 2>&1
 
-# backup a remote system user john's home directory.
-SOURCE="john@server.com:/home/john/"
+# backup a remote system foo.bar, user john's home directory.
+SRC="john@foo.bar:/home/john/"
 DEST="/media/usbdrive/backup"
 BACKUPS=30
-LOG=$LOGDIR/bck-server_home_john.log
-$PROG $SOURCE $DEST $BACKUPS >$LOG 2>&1
+LOG=/var/log/bck-server_home_john.log
+yarsa -c $BACKUPS -f -s $SRC $DEST >$LOG 2>&1
 #/usr/bin/mail user@host.com < $LOG
 savelog -c $BACKUPS $LOG >/dev/null 2>&1
 

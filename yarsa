@@ -209,7 +209,7 @@ rolldate=
 rotateonly=
 createdir=
 
-while getopts c:dlr:Rs:th opt; do
+while getopts c:dflr:Rs:th opt; do
     case "$opt" in
         c) count="$OPTARG"
             ;;
@@ -286,6 +286,11 @@ remove_number=$(($backup_number - $count))
 # Create a list of dir to remove like:
 if [ $remove_number -gt 0 ]; then
     remove_list=$(find $dest -maxdepth 1 -type d -name "rsb_*"|sort|head -$remove_number)
+fi
+
+# Clear remove_number if negative.
+if [ $remove_number -lt 0 ]; then
+    remove_number=0
 fi
 
 # The most recent backups

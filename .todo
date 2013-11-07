@@ -3,6 +3,9 @@
     <note priority="veryhigh" time="1383081590" done="1383831937">
         fix filenames in manpage and docs.
     </note>
+    <note priority="veryhigh" time="1383123593" done="1383832142">
+        bug: switch -f not working.
+    </note>
     <note priority="veryhigh" time="1383745165" done="1383831962">
         remote rsync backup does not work, source check can't be completed.
     </note>
@@ -18,20 +21,11 @@
     <note priority="low" time="1383123730" done="1383832022">
         whish: move echo of the parameters from the beginning to the checks.
     </note>
-    <note priority="veryhigh" time="1383123593" done="1383832142">
-        bug: switch -f not working.
-    </note>
     <note priority="high" time="1382738165">
         implement log file generation
     </note>
-    <note priority="high" time="1383123643">
-        bug: check that only 1 parameter left out of switches, not more.
-    </note>
     <note priority="medium" time="1380786209">
         Handle switches, like compress for internet file transfer.
-    </note>
-    <note priority="medium" time="1383123674">
-        bug: remove &lt;&gt; from bakup dirname.
     </note>
     <note priority="low" time="1382738217">
         write rsyncd examples doc.
