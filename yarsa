@@ -18,14 +18,12 @@
 
 set -e
 
-# Default configuration
-# todo: link to the git describe --tags
-VERSION="1.0"
+VERSION="devel"
 PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
 DATUM=$(date +%y%m%d%H%M)
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
 
-# Check if the number of backups > 0
+# Check if the number of backups (-c param) > 0
 check_cycle()
 {
     echo -n "Keep old backup: "
