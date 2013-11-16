@@ -23,15 +23,22 @@ PATH=$PATH:/sbin:/bin:/usr/sbin:/usr/bin
 DATUM=$(date +%y%m%d%H%M)
 RSYNC_SWITCH="-av --delete --delete-excluded --ignore-errors --whole-file --numeric-ids"
 
+logit()
+{
+    if [ $log ]; then
+        echo "${*}" >> $logfile
+    else
+        echo "${*}"
+    fi
+    }
+
 # Check if the number of backups (-c param) > 0
 check_cycle()
 {
-    echo -n "Keep old backup: "
-
     if [ $count -gt 0 ]; then
-        echo "$count"
+        logit "Keep old backup: $count"
     else
-        echo "Error, wrong number $count"
+        echo " Error, wrong -c param: $count" >&2
         exit 1
     fi
 }
@@ -39,12 +46,10 @@ check_cycle()
 # Check the destination directory.
 check_dest()
 {
-    echo -n "Backup to: "
-
     if [ -d "$dest" ]; then
-        echo "$dest"
+        logit "Backup to: $dest"
     else
-        echo "Error $dest not found."
+        echo "Error Dest: $dest not found." >&2
         exit 1
     fi
 }
@@ -52,12 +57,10 @@ check_dest()
 # Check the source directory.
 check_source()
 {
-    echo -n "Source: "
-
     if [ -d "$source" ]; then
-        echo "$source"
+        logit "Source: $source"
     else
-        echo "Error $source not found."
+        echo "Error -s param: $source not found." >&2
         exit 1
     fi
 }
@@ -65,12 +68,10 @@ check_source()
 # Check if the last directory to be linked exists.
 check_lastlink()
 {
-    echo -n "Last backup to be linked: "
-
     if [ -d "$last_to_link" ]; then
-        echo "$last_to_link"
+        logit "Last backup to be linked: $last_to_link"
     else
-        echo "Error $last_to_link not found."
+        echo "Error last bck: $last_to_link not found." >&2
         exit 1
     fi
 }
@@ -78,12 +79,10 @@ check_lastlink()
 # Check if the new backup does not already exists.
 check_newlink()
 {
-    echo -n "New backup: "
-
     if [ ! -e $new_to_link ]; then
-        echo "$new_to_link"
+        logit "New backup: $new_to_link"
     else
-        echo "Error, $new_to_link already exists!."
+        echo "Error new bck: $new_to_link already exists!." >&2
         exit 1
     fi
 }
@@ -105,33 +104,38 @@ do_checks()
 # List all backup's directory found.
 list_backup_dir()
 {
-    echo "backup directory found: $backup_number"
+    logit "backup directory found: $backup_number"
 
     for i in $backup_list; do
-        echo " " $i
+        logit " " $i
     done
 }
 
 # List the backup's directory to be removed.
 list_rm_dir()
 {
-    echo "directory to remove: $remove_number"
+    logit "directory to remove: $remove_number"
 
     for i in $remove_list; do
-        echo " " $i
+        logit " " $i
     done
 }
 
 remove_old_backups()
 {
     for i in $remove_list; do
-        echo -n "Removing ... $i ... ["
-
         if [ -d $i ]; then
+            output="Removing $i"
             rm -rf $i
-            echo "OK]"
+
+            if [ -f $i.log ]; then
+                output="$output[.log]"
+                rm $i.log
+            fi
+
+            logit $output
         else
-            echo "FAILED]"
+            echo "Error, failed to remove $i" >&2
             exit 2
         fi
     done
@@ -139,13 +143,11 @@ remove_old_backups()
 
 link_new_dir()
 {
-    echo -n "Hard linking $new_to_link to $last_to_link ... ["
-
     if [ -d $last_to_link ]; then
+        logit "Linking $new_to_link to $last_to_link"
         cp -al $last_to_link $new_to_link
-        echo "OK]"
     else
-        echo "FAILED]"
+        echo "Error, failed to link new_to_link to $last_to_link" >&2
         exit 3
     fi
 }
@@ -153,10 +155,14 @@ link_new_dir()
 # Echo the df -m
 dodf()
 {
+    logit "\n"
+
     if [ $dodf ]; then
-        echo
-        echo "-- df -m --"
-        df -m
+        if [ $log ]; then
+            df -m >> $logfile
+        else
+            df -m
+        fi
     fi
 }
 
@@ -172,11 +178,16 @@ do_backup()
         RSYNC_SWITCH="$RSYNC_SWITCH --include-from=$includefile"
     fi
 
-    echo "rsync $RSYNC_SWITCH $source $new_to_link/ 2>&1"
-    echo
-    rsync $RSYNC_SWITCH $source $new_to_link/ 2>&1
-    echo
-    echo " * Completed *"
+    if [ $log ]; then
+        echo "\nrsync $RSYNC_SWITCH $source $new_to_link/ 2>&1" >> $logfile
+        rsync $RSYNC_SWITCH $source $new_to_link/ 2>&1 >> $logfile
+        echo >> $logfile
+        echo " * Completed *" >> $logfile
+    else
+        echo "\nrsync $RSYNC_SWITCH $source $new_to_link/ 2>&1"
+        rsync $RSYNC_SWITCH $source $new_to_link/ 2>&1
+        echo "\n * Completed *"
+    fi
 }
 
 # Help message
@@ -264,31 +275,26 @@ fi
 
 configfile=$dest/yarsa.cfg
 
-# first log the status
-echo "Yarsa backup system ($VERSION)"
-echo
-echo "start at $(date)"
-
 # Read the local conffile
 if [ -r "$configfile" ]; then
     . $configfile
 else
-    echo " Missing config file: $configfile"
+    echo "Yarsa missing config file: $configfile" >&2
     exit 1
 fi
 
 backup_number=$(find $dest -maxdepth 1 -type d -name "rsb_*" | wc -l)
 backup_list=$(find $dest -maxdepth 1 -type d -name "rsb_*" | sort)
 
-# Directory to remove
+# Number of directory to remove
 remove_number=$(($backup_number - $count))
 
-# Create a list of dir to remove like:
+# list of dir to remove
 if [ $remove_number -gt 0 ]; then
     remove_list=$(find $dest -maxdepth 1 -type d -name "rsb_*"|sort|head -$remove_number)
 fi
 
-# Clear remove_number if negative.
+# If remove_number < 0 then make it 0.
 if [ $remove_number -lt 0 ]; then
     remove_number=0
 fi
@@ -303,22 +309,27 @@ else
     new_to_link=$dest/rsb_$DATUM
 fi
 
+# Set the logfile name
+logfile="$new_to_link.log"
+
+# first log the status
+logit "Yarsa backup system ($VERSION)"
+logit "\nstart at $(date)"
+
 do_checks
 list_backup_dir
 list_rm_dir
 dodf
 remove_old_backups
 link_new_dir
-echo
 
 if [ ! $rotateonly ]; then
     do_backup
 else
-    echo "Rotate only active, skipping backup."
+    logit "Rotate only active, skipping backup."
 fi
 
 dodf
-echo
-echo "end at $(date)"
+logit "\nend at $(date)"
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
